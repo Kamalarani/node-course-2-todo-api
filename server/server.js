@@ -2,16 +2,19 @@ var express = require("express");
 var bodyParser = require("body-parser");
 
 var {mongoose} = require('./db/mongoose.js');
-var{Todo} = require('./models/todo.js');
-var{user} = require('./models/user.js');
+var {Todo} = require('./models/todo.js');
+var {user} = require('./models/user.js');
+
+const {ObjectID} = require("mongodb");
 
 var app = express();
+var port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
 app.post('/todos',(req,res)=> {
   //console.log(req.body);
-  var todo = new Todo ({
+  var todos = new Todo ({
     text: req.body.text
   });
 
@@ -23,15 +26,34 @@ app.post('/todos',(req,res)=> {
 });
 
 app.get('/todos',(req,res) => {
-  app.find().then((todos) => {
-    res.send(todos);
+  Todo.find().then((todos) => {
+    res.send({todos});
   },(err) => {
     res.status(400).send(err);
   });
 });
 
-app.listen(3000, () => {
-  console.log("Started on port 3000");
+app.get('/todos/:id',(req,res) => {
+  var id = req.params.id;
+
+  if(!ObjectID.isValid(id)){
+    console.log("ID NOT FOUND");
+  }
+
+    Todo.findById(id).then((todo) => {
+      if(!todo){
+        console.log("ID NOT FOUND");
+      }
+      console.log("TODO",todo);
+
+    }).catch((err) => {
+      console.log(err);
+    });
+
+});
+
+app.listen(port, () => {
+  console.log(`Started On The Port ${port}`);
 });
 
 module.exports = {app};
